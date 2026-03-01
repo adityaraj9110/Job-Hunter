@@ -11,10 +11,16 @@ const applicationRoutes = require('./routes/applications');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const feUrl = process.env.FRONTEND_URL;
+const whiteListUrls = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  feUrl
+]
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: whiteListUrls,
   credentials: true,
 }));
 app.use(express.json({ limit: '50mb' }));
