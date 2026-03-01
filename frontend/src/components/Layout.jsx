@@ -35,6 +35,21 @@ export default function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-nav">
+        {navItems.map(item => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.path === '/'}
+            className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   );
 }

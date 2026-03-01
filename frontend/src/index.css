@@ -96,6 +96,7 @@ body {
 .app-layout {
   display: flex;
   min-height: 100vh;
+  padding-bottom: 0; /* Override on mobile */
 }
 
 .sidebar {
@@ -179,6 +180,7 @@ body {
   min-height: 100vh;
   background: var(--gradient-glow);
   background-attachment: fixed;
+  overflow-x: hidden;
 }
 
 /* ─── Page Headers ─── */
@@ -772,19 +774,100 @@ body {
   }
 }
 
+/* ─── Mobile Bottom Navigation (Hidden on Desktop) ─── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 1000;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.mobile-nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+}
+
+.mobile-nav-link .nav-icon {
+  font-size: 1.25rem;
+  margin-bottom: 2px;
+  transition: transform var(--transition-fast);
+}
+
+.mobile-nav-link.active {
+  color: var(--accent-primary);
+}
+
+.mobile-nav-link.active .nav-icon {
+  transform: translateY(-2px);
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
+  .app-layout {
+    padding-bottom: 70px; /* Space for bottom nav */
+  }
+  
   .sidebar {
     display: none;
   }
+  
+  .mobile-nav {
+    display: flex;
+  }
+  
   .main-content {
     margin-left: 0;
-    padding: 20px;
+    padding: 24px 16px; /* Tighter padding for mobile */
   }
+  
+  .page-header h2 {
+    font-size: 1.4rem;
+  }
+  
+  .card {
+    padding: 16px; /* Tighter padding for mobile */
+  }
+  
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  
   .form-grid {
     grid-template-columns: 1fr;
   }
+  
+  /* Fix sticky layouts pulling offscreen */
+  .upload-zone {
+    padding: 32px 16px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .app-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 }
+
