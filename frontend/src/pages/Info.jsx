@@ -10,6 +10,9 @@ export default function Info() {
     phone: '',
     location: '',
     linkedinUrl: '',
+    currentJobTitle: '',
+    experienceYears: '',
+    senderName: '',
     smtpHost: '',
     smtpPort: '',
     smtpEmail: '',
@@ -140,6 +143,24 @@ export default function Info() {
               onChange={(e) => handleChange('linkedinUrl', e.target.value)}
             />
           </div>
+          <div className="form-group">
+            <label className="form-label">Current Job Title</label>
+            <input
+              className="form-input"
+              placeholder="e.g., Frontend Developer"
+              value={info.currentJobTitle || ''}
+              onChange={(e) => handleChange('currentJobTitle', e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Total Experience</label>
+            <input
+              className="form-input"
+              placeholder="e.g., 3 years"
+              value={info.experienceYears || ''}
+              onChange={(e) => handleChange('experienceYears', e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
@@ -149,6 +170,16 @@ export default function Info() {
           <span className="card-title">📧 SMTP Email Settings</span>
         </div>
         <div className="form-grid">
+          <div className="form-group">
+            <label className="form-label">Sender Name <span style={{ color: 'var(--accent-danger)', fontWeight: 700 }}>*</span></label>
+            <input
+              className="form-input"
+              placeholder="e.g., Aditya Raj — shown as email sender"
+              value={info.senderName || ''}
+              onChange={(e) => handleChange('senderName', e.target.value)}
+              required
+            />
+          </div>
           <div className="form-group">
             <label className="form-label">SMTP Host</label>
             <input

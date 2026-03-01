@@ -3,11 +3,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const mammoth = require('mammoth');
-const { PrismaClient } = require('@prisma/client');
+const ResumeProfile = require('../models/ResumeProfile');
 const { parseResumeWithAI } = require('../services/aiService');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * Extract text from a PDF using pdfjs-dist
@@ -75,27 +74,21 @@ router.post('/upload', upload.single('resume'), async (req, res) => {
     // Parse with AI
     const parsed = await parseResumeWithAI(rawText);
 
-    // Save to database
-    const profile = await prisma.resumeProfile.upsert({
-      where: { id: 1 },
-      update: {
-        rawText,
-        profileSummary: parsed.profileSummary || {},
-        skills: parsed.skills || [],
-        experience: parsed.experience || [],
-        education: parsed.education || [],
-        projects: parsed.projects || [],
-      },
-      create: {
-        id: 1,
-        rawText,
-        profileSummary: parsed.profileSummary || {},
-        skills: parsed.skills || [],
-        experience: parsed.experience || [],
-        education: parsed.education || [],
-        projects: parsed.projects || [],
-      },
-    });
+    // Save to database (upsert — single document pattern)
+    const updateData = {
+      rawText,
+      profileSummary: parsed.profileSummary || {},
+      skills: parsed.skills || [],
+      experience: parsed.experience || [],
+      education: parsed.education || [],
+      projects: parsed.projects || [],
+    };
+
+    const profile = await ResumeProfile.findOneAndUpdate(
+      {},
+      { $set: updateData },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     res.json({ success: true, profile });
   } catch (err) {
@@ -107,7 +100,7 @@ router.post('/upload', upload.single('resume'), async (req, res) => {
 // GET /api/resume/profile — fetch parsed resume profile
 router.get('/profile', async (req, res) => {
   try {
-    const profile = await prisma.resumeProfile.findUnique({ where: { id: 1 } });
+    const profile = await ResumeProfile.findOne();
     if (!profile) {
       return res.json({ exists: false });
     }

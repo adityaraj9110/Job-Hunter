@@ -122,7 +122,7 @@ ${rawText}`;
 /**
  * Tailor CV to match job description
  */
-async function tailorCV(resumeProfile, jobData, userInfo) {
+async function tailorCV(resumeProfile, jobData, userInfo, additionalNotes) {
   const prompt = `You are an expert CV writer. Given a candidate profile and a job description,
 rewrite the candidate's experience bullets and skills section to best match the job.
 Keep all facts true — only reframe and reorder. Output structured JSON.
@@ -152,11 +152,13 @@ PROJECTS: ${JSON.stringify(resumeProfile.projects)}
 JOB_DESCRIPTION: ${JSON.stringify(jobData)}
 
 USER_INFO: {
+  currentJobTitle: "${userInfo?.currentJobTitle || 'not specified'}",
+  experienceYears: "${userInfo?.experienceYears || 'not specified'}",
   currentCTC: "${userInfo?.currentCTC || 'not specified'}",
   expectedCTC: "${userInfo?.expectedCTC || 'not specified'}",
   noticePeriod: "${userInfo?.noticePeriod || 'not specified'}",
   isServing: ${userInfo?.isServing || false}
-}`;
+}${additionalNotes ? `\n\nADDITIONAL CONTEXT FROM CANDIDATE (incorporate this into the CV for more relevance):\n${additionalNotes}` : ''}`;
 
   const result = await callWithRetry(prompt);
   return extractJSON(result.response.text());
@@ -165,12 +167,12 @@ USER_INFO: {
 /**
  * Write personalized email to HR
  */
-async function writeEmail(jobData, resumeProfile, userInfo) {
+async function writeEmail(jobData, resumeProfile, userInfo, additionalNotes) {
   const tone = userInfo?.aiTone || 'formal';
 
   const prompt = `You are a professional job applicant. Write a concise, personalized cold email
 to an HR at ${jobData.company || 'the company'} for the role of ${jobData.jobTitle || 'the position'}.
-Mention: notice period, expected CTC, key matching skills.
+Mention: notice period, expected CTC, key matching skills, current job title and experience.
 Tone: ${tone}. Keep it under 200 words.
 
 Output ONLY valid JSON: { "subject": "...", "body": "..." }
@@ -178,13 +180,15 @@ Output ONLY valid JSON: { "subject": "...", "body": "..." }
 JOB: ${JSON.stringify(jobData)}
 MY_PROFILE: ${JSON.stringify(resumeProfile.profileSummary)}
 MY_INFO: {
+  currentJobTitle: "${userInfo?.currentJobTitle || 'not specified'}",
+  experienceYears: "${userInfo?.experienceYears || 'not specified'}",
   currentCTC: "${userInfo?.currentCTC || 'not specified'}",
   expectedCTC: "${userInfo?.expectedCTC || 'not specified'}",
   noticePeriod: "${userInfo?.noticePeriod || 'not specified'}",
   isServing: ${userInfo?.isServing || false},
   phone: "${userInfo?.phone || ''}",
   linkedin: "${userInfo?.linkedinUrl || ''}"
-}`;
+}${additionalNotes ? `\n\nADDITIONAL CONTEXT FROM CANDIDATE (use this to make the email more relevant and personalized):\n${additionalNotes}` : ''}`;
 
   const result = await callWithRetry(prompt);
   return extractJSON(result.response.text());

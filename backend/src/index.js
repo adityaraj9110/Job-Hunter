@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const connectDB = require('./db');
 const infoRoutes = require('./routes/info');
 const resumeRoutes = require('./routes/resume');
 const applyRoutes = require('./routes/apply');
@@ -43,8 +44,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`⚡ AutoApply API running on http://localhost:${PORT}`);
+// Connect to MongoDB, then start server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`⚡ JobHunter API running on http://localhost:${PORT}`);
+  });
 });
 
 module.exports = app;

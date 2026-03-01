@@ -13,7 +13,7 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="sidebar-logo">
           <span className="bolt">⚡</span>
-          <h1>AutoApply</h1>
+          <h1>JobHunter</h1>
         </div>
         <nav className="sidebar-nav">
           {navItems.map(item => (

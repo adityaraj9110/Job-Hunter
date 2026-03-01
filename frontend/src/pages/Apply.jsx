@@ -11,6 +11,7 @@ export default function Apply() {
   const [loadingMsg, setLoadingMsg] = useState('');
   const [toast, setToast] = useState(null);
   const [step, setStep] = useState(1); // 1=input, 2=preview, 3=done
+  const [additionalNotes, setAdditionalNotes] = useState('');
 
   function showToast(msg, type = 'success') {
     setToast({ msg, type });
@@ -45,7 +46,7 @@ export default function Apply() {
     setLoading(true);
     setLoadingMsg('🧠 Generating CV & email...');
     try {
-      const res = await api.post('/apply/preview', { jobData });
+      const res = await api.post('/apply/preview', { jobData, additionalNotes: additionalNotes || undefined });
       setPreview(res.data.preview);
       setStep(3);
     } catch (err) {
@@ -64,6 +65,7 @@ export default function Apply() {
         jobUrl: mode === 'url' ? jobUrl : undefined,
         emailSubject: preview?.emailSubject,
         emailBody: preview?.emailBody,
+        additionalNotes: additionalNotes || undefined,
       });
       showToast(res.data.message || 'Application sent!');
       // Reset form
@@ -72,6 +74,7 @@ export default function Apply() {
       setScreenshotFile(null);
       setJobData(null);
       setPreview(null);
+      setAdditionalNotes('');
     } catch (err) {
       showToast(err.response?.data?.error || 'Send failed', 'error');
     } finally {
@@ -232,7 +235,21 @@ export default function Apply() {
             </div>
           )}
 
-          <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+          <div style={{ marginTop: '20px' }}>
+            <div className="form-group">
+              <label className="form-label">💡 Want to add additional details? <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8rem' }}>(optional)</span></label>
+              <textarea
+                className="form-input"
+                placeholder="Add any extra context about yourself relevant to this job — e.g., specific projects, domain expertise, or achievements that match the role. The AI will incorporate this into your CV and email for more relevance."
+                rows={4}
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                style={{ resize: 'vertical', minHeight: '80px', lineHeight: 1.6, fontFamily: 'inherit' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
             <button className="btn btn-primary" onClick={handlePreview}>
               🧠 Generate CV & Email Preview
             </button>

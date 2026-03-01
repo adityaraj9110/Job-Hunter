@@ -20,7 +20,7 @@ async function sendEmail(userInfo, toEmail, subject, body, cvPath) {
   });
 
   const mailOptions = {
-    from: `"${userInfo.phone ? 'AutoApply' : 'AutoApply'}" <${userInfo.smtpEmail}>`,
+    from: `"${userInfo.senderName}" <${userInfo.smtpEmail}>`,
     to: toEmail,
     subject,
     text: body,

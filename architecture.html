@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AutoApply — System Architecture</title>
+<title>JobHunter — System Architecture</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f1a; color: #e2e8f0; min-height: 100vh; padding: 40px 20px; }
@@ -123,7 +123,7 @@
 <body>
 
 <div class="container">
-  <h1>⚡ AutoApply</h1>
+  <h1>⚡ JobHunter</h1>
   <p class="subtitle">Personal Job Application Automation Portal — System Architecture & Flow</p>
 
   <!-- INPUT SECTION -->
@@ -376,10 +376,10 @@
         </div>
       </div>
       <div class="tech-item">
-        <div class="tech-icon">🐘</div>
+        <div class="tech-icon">🍃</div>
         <div class="tech-info">
-          <div class="tech-name">PostgreSQL + Prisma</div>
-          <div class="tech-role">Database + ORM</div>
+          <div class="tech-name">MongoDB + Mongoose</div>
+          <div class="tech-role">Database (Atlas Cloud) + ODM</div>
         </div>
       </div>
       <div class="tech-item">
@@ -422,11 +422,11 @@
 
   <!-- DB SCHEMA -->
   <div class="flow-section">
-    <div class="section-title">06 — Database Tables</div>
+    <div class="section-title">06 — Database Collections (MongoDB)</div>
     <div class="db-grid">
       <div class="db-table">
-        <div class="db-header">📊 user_info</div>
-        <div class="db-field pk"><span class="field-name">id</span><span class="field-type">Int (PK)</span></div>
+        <div class="db-header">📊 userinfos</div>
+        <div class="db-field pk"><span class="field-name">_id</span><span class="field-type">ObjectId (PK)</span></div>
         <div class="db-field"><span class="field-name">currentCTC</span><span class="field-type">String</span></div>
         <div class="db-field"><span class="field-name">expectedCTC</span><span class="field-type">String</span></div>
         <div class="db-field"><span class="field-name">noticePeriod</span><span class="field-type">String</span></div>
@@ -436,8 +436,8 @@
         <div class="db-field"><span class="field-name">aiTone</span><span class="field-type">String</span></div>
       </div>
       <div class="db-table">
-        <div class="db-header">📄 resume_profile</div>
-        <div class="db-field pk"><span class="field-name">id</span><span class="field-type">Int (PK)</span></div>
+        <div class="db-header">📄 resumeprofiles</div>
+        <div class="db-field pk"><span class="field-name">_id</span><span class="field-type">ObjectId (PK)</span></div>
         <div class="db-field"><span class="field-name">rawText</span><span class="field-type">Text</span></div>
         <div class="db-field"><span class="field-name">profileSummary</span><span class="field-type">JSON</span></div>
         <div class="db-field"><span class="field-name">skills</span><span class="field-type">JSON Array</span></div>
@@ -446,7 +446,7 @@
       </div>
       <div class="db-table">
         <div class="db-header">📬 applications</div>
-        <div class="db-field pk"><span class="field-name">id</span><span class="field-type">Int (PK)</span></div>
+        <div class="db-field pk"><span class="field-name">_id</span><span class="field-type">ObjectId (PK)</span></div>
         <div class="db-field"><span class="field-name">jobTitle</span><span class="field-type">String</span></div>
         <div class="db-field"><span class="field-name">company</span><span class="field-type">String</span></div>
         <div class="db-field"><span class="field-name">hrEmail</span><span class="field-type">String</span></div>
@@ -460,7 +460,7 @@
   </div>
 
   <div style="text-align:center; color:#334155; font-size:0.8rem; padding: 20px 0 10px;">
-    AutoApply — Personal Job Application Automation Portal &nbsp;•&nbsp; Built with Claude AI
+    JobHunter — Personal Job Application Automation Portal &nbsp;•&nbsp; Built with Claude AI
   </div>
 </div>
 

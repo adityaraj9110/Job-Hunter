@@ -1,19 +1,17 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const UserInfo = require('../models/UserInfo');
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/info — fetch user settings
 router.get('/', async (req, res) => {
   try {
-    let info = await prisma.userInfo.findUnique({ where: { id: 1 } });
+    let info = await UserInfo.findOne();
     if (!info) {
-      info = await prisma.userInfo.create({
-        data: { id: 1 },
-      });
+      info = await UserInfo.create({});
     }
     // Don't send the encrypted SMTP password to frontend
-    const { smtpPassword, ...safeInfo } = info;
+    const infoObj = info.toObject();
+    const { smtpPassword, ...safeInfo } = infoObj;
     res.json({ ...safeInfo, hasSmtpPassword: !!smtpPassword });
   } catch (err) {
     console.error('Error fetching info:', err);
@@ -25,6 +23,7 @@ router.get('/', async (req, res) => {
 router.put('/', async (req, res) => {
   try {
     const {
+      senderName, currentJobTitle, experienceYears,
       currentCTC, expectedCTC, noticePeriod, isServing,
       phone, location, linkedinUrl,
       smtpHost, smtpPort, smtpEmail, smtpPassword,
@@ -32,6 +31,9 @@ router.put('/', async (req, res) => {
     } = req.body;
 
     const data = {};
+    if (senderName !== undefined) data.senderName = senderName;
+    if (currentJobTitle !== undefined) data.currentJobTitle = currentJobTitle;
+    if (experienceYears !== undefined) data.experienceYears = experienceYears;
     if (currentCTC !== undefined) data.currentCTC = currentCTC;
     if (expectedCTC !== undefined) data.expectedCTC = expectedCTC;
     if (noticePeriod !== undefined) data.noticePeriod = noticePeriod;
@@ -45,13 +47,14 @@ router.put('/', async (req, res) => {
     if (smtpPassword !== undefined) data.smtpPassword = smtpPassword; // TODO: encrypt
     if (aiTone !== undefined) data.aiTone = aiTone;
 
-    const info = await prisma.userInfo.upsert({
-      where: { id: 1 },
-      update: data,
-      create: { id: 1, ...data },
-    });
+    const info = await UserInfo.findOneAndUpdate(
+      {},
+      { $set: data },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
-    const { smtpPassword: _, ...safeInfo } = info;
+    const infoObj = info.toObject();
+    const { smtpPassword: _, ...safeInfo } = infoObj;
     res.json({ ...safeInfo, hasSmtpPassword: !!info.smtpPassword });
   } catch (err) {
     console.error('Error updating info:', err);

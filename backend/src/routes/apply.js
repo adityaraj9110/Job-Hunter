@@ -2,14 +2,15 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PrismaClient } = require('@prisma/client');
+const ResumeProfile = require('../models/ResumeProfile');
+const UserInfo = require('../models/UserInfo');
+const Application = require('../models/Application');
 const { extractJobFromURL, extractJobFromScreenshot } = require('../services/jobExtractor');
 const { tailorCV, writeEmail } = require('../services/aiService');
 const { generateCVPdf } = require('../services/cvGenerator');
 const { sendEmail } = require('../services/emailService');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Configure multer for screenshot uploads
 const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
@@ -50,22 +51,22 @@ router.post('/extract', upload.single('screenshot'), async (req, res) => {
 // POST /api/apply/preview — generate CV + email preview without sending
 router.post('/preview', async (req, res) => {
   try {
-    const { jobData } = req.body;
+    const { jobData, additionalNotes } = req.body;
     if (!jobData) return res.status(400).json({ error: 'Job data is required' });
 
     // Fetch user profile and info
-    const profile = await prisma.resumeProfile.findUnique({ where: { id: 1 } });
-    const userInfo = await prisma.userInfo.findUnique({ where: { id: 1 } });
+    const profile = await ResumeProfile.findOne();
+    const userInfo = await UserInfo.findOne();
 
     if (!profile) {
       return res.status(400).json({ error: 'Please upload your resume first' });
     }
 
     // Tailor CV
-    const tailoredCV = await tailorCV(profile, jobData, userInfo);
+    const tailoredCV = await tailorCV(profile, jobData, userInfo, additionalNotes);
 
     // Write email
-    const email = await writeEmail(jobData, profile, userInfo);
+    const email = await writeEmail(jobData, profile, userInfo, additionalNotes);
 
     res.json({
       success: true,
@@ -85,7 +86,7 @@ router.post('/preview', async (req, res) => {
 // POST /api/apply — full pipeline: extract → tailor → email → send
 router.post('/', upload.single('screenshot'), async (req, res) => {
   try {
-    const { jobUrl, jobData: preExtractedJob, emailSubject, emailBody: customEmailBody } = req.body;
+    const { jobUrl, jobData: preExtractedJob, emailSubject, emailBody: customEmailBody, additionalNotes } = req.body;
     let jobData = preExtractedJob ? (typeof preExtractedJob === 'string' ? JSON.parse(preExtractedJob) : preExtractedJob) : null;
 
     // Step 1: Extract job if not pre-extracted
@@ -100,8 +101,8 @@ router.post('/', upload.single('screenshot'), async (req, res) => {
     }
 
     // Fetch user data
-    const profile = await prisma.resumeProfile.findUnique({ where: { id: 1 } });
-    const userInfo = await prisma.userInfo.findUnique({ where: { id: 1 } });
+    const profile = await ResumeProfile.findOne();
+    const userInfo = await UserInfo.findOne();
 
     if (!profile) {
       return res.status(400).json({ error: 'Please upload your resume first' });
@@ -111,7 +112,7 @@ router.post('/', upload.single('screenshot'), async (req, res) => {
     }
 
     // Step 2: Tailor CV
-    const tailoredCV = await tailorCV(profile, jobData, userInfo);
+    const tailoredCV = await tailorCV(profile, jobData, userInfo, additionalNotes);
 
     // Step 3: Generate PDF
     const cvDir = path.join(__dirname, '..', '..', 'generated-cvs');
@@ -125,7 +126,7 @@ router.post('/', upload.single('screenshot'), async (req, res) => {
     if (customEmailBody && emailSubject) {
       email = { subject: emailSubject, body: customEmailBody };
     } else {
-      email = await writeEmail(jobData, profile, userInfo);
+      email = await writeEmail(jobData, profile, userInfo, additionalNotes);
     }
 
     // Step 5: Send email
@@ -135,18 +136,16 @@ router.post('/', upload.single('screenshot'), async (req, res) => {
     }
 
     // Step 6: Log application
-    const application = await prisma.application.create({
-      data: {
-        jobTitle: jobData.jobTitle || 'Unknown',
-        company: jobData.company || 'Unknown',
-        hrEmail: recipientEmail || null,
-        jobUrl: jobUrl || null,
-        extractedJob: jobData,
-        generatedCv: `/generated-cvs/${cvFilename}`,
-        emailSubject: email.subject,
-        emailBody: email.body,
-        status: recipientEmail ? 'sent' : 'draft',
-      },
+    const application = await Application.create({
+      jobTitle: jobData.jobTitle || 'Unknown',
+      company: jobData.company || 'Unknown',
+      hrEmail: recipientEmail || null,
+      jobUrl: jobUrl || null,
+      extractedJob: jobData,
+      generatedCv: `/generated-cvs/${cvFilename}`,
+      emailSubject: email.subject,
+      emailBody: email.body,
+      status: recipientEmail ? 'sent' : 'draft',
     });
 
     res.json({

@@ -1,10 +1,11 @@
-# 🚀 AutoApply — Personal Job Application Automation Portal
+# 🚀 JobHunter — Personal Job Application Automation Portal
 
 > A self-hosted, AI-powered portal that automatically extracts job details from URLs or screenshots, generates a tailored CV, and sends personalized emails to HRs — all from your own dashboard.
 
 ---
 
 ## 📌 Table of Contents
+
 1. [Project Vision](#project-vision)
 2. [System Architecture](#system-architecture)
 3. [How It Works — Full Flow](#how-it-works--full-flow)
@@ -22,7 +23,8 @@
 
 ## 🎯 Project Vision
 
-AutoApply is your personal **job application co-pilot**. Instead of manually crafting CVs and writing cover emails for every job, you:
+JobHunter is your personal **job application co-pilot**. Instead of manually crafting CVs and writing cover emails for every job, you:
+
 1. Drop a job URL or screenshot into the portal
 2. AI reads the job description, extracts key requirements and HR contact
 3. AI generates a **tailored CV** matching the job description to your profile
@@ -58,12 +60,12 @@ AutoApply is your personal **job application co-pilot**. Instead of manually cra
 └───────────┼───────────────────────────────────────────────────────┘
             │
 ┌───────────▼───────────────────────────────────────────────────────┐
-│                       DATABASE (PostgreSQL)                        │
-│  users │ profile_info │ resume_data │ applications │ sent_emails  │
+│                     DATABASE (MongoDB Atlas)                       │
+│  userinfos │ resumeprofiles │ applications                        │
 └───────────────────────────────────────────────────────────────────┘
 
 External Services:
-  ├── Anthropic Claude API  → Job parsing, CV generation, email writing
+  ├── Google Gemini API     → Job parsing, CV generation, email writing
   ├── LinkedIn (scraping)   → Job details extraction via URL
   ├── Playwright/Puppeteer  → Browser automation for screenshot parsing
   └── SMTP (Gmail/Custom)   → Email delivery
@@ -140,46 +142,49 @@ User uploads job screenshot (PNG/JPG)
 
 ## 🧰 Tech Stack
 
-| Layer         | Technology                        | Why                                      |
-|---------------|-----------------------------------|------------------------------------------|
-| Frontend      | Next.js 14 (App Router)           | SSR, file-based routing, fast            |
-| UI Styling    | Tailwind CSS + shadcn/ui          | Fast, clean, accessible components       |
-| Backend       | Node.js + Express                 | Simple REST API, great ecosystem         |
-| Database      | PostgreSQL + Prisma ORM           | Typed queries, migrations, reliable      |
-| AI Engine     | Anthropic Claude API              | Vision + text, best for structured tasks |
-| Job Scraping  | Playwright (headless browser)     | Handles dynamic JS-rendered pages        |
-| Email         | Nodemailer                        | SMTP support, attachment handling        |
-| CV Generation | PDFKit or react-pdf               | Programmatic PDF from template           |
-| Auth          | JWT + bcrypt (single-user)        | Self-hosted personal portal              |
-| File Storage  | Local filesystem / S3 (optional)  | Resume + generated CV storage            |
-| Deployment    | Docker + Docker Compose           | Self-hosted, portable                    |
+| Layer         | Technology                       | Why                                        |
+| ------------- | -------------------------------- | ------------------------------------------ |
+| Frontend      | Next.js 14 (App Router)          | SSR, file-based routing, fast              |
+| UI Styling    | Tailwind CSS + shadcn/ui         | Fast, clean, accessible components         |
+| Backend       | Node.js + Express                | Simple REST API, great ecosystem           |
+| Database      | MongoDB Atlas + Mongoose ODM     | Flexible documents, cloud-hosted, scalable |
+| AI Engine     | Google Gemini API (Free Tier)    | Vision + text, generous free quota         |
+| Job Scraping  | Playwright (headless browser)    | Handles dynamic JS-rendered pages          |
+| Email         | Nodemailer                       | SMTP support, attachment handling          |
+| CV Generation | PDFKit or react-pdf              | Programmatic PDF from template             |
+| Auth          | JWT + bcrypt (single-user)       | Self-hosted personal portal                |
+| File Storage  | Local filesystem / S3 (optional) | Resume + generated CV storage              |
+| Deployment    | Docker + Docker Compose          | Self-hosted, portable                      |
 
 ---
 
 ## 📱 Features by Page
 
 ### 🏠 Home — Dashboard
+
 - **Sent Applications Feed**: List of all emails sent with timestamp, company, job title, status
 - **Stats Cards**: Total applied, this week, this month
 - **Quick Preview**: Click any application to see the CV that was sent + email content
 - **Status Tracking**: Mark as "Got Reply", "Rejected", "Interview Scheduled"
 
 ### ℹ️ Info — Personal Settings
+
 All fields are inline-editable and saved in DB:
 
-| Field           | Description                               |
-|-----------------|-------------------------------------------|
-| Current CTC     | e.g., "12 LPA" — used in emails          |
-| Expected CTC    | e.g., "18 LPA"                           |
-| Notice Period   | e.g., "30 days"                          |
-| Is Serving NP   | Toggle: Yes/No                           |
-| Location        | Current city / open to relocation        |
-| Phone           | Included in CV / email signature         |
-| LinkedIn URL    | Appended to email                        |
-| SMTP Settings   | Host, port, email, app password (encrypted) |
-| AI Tone         | Formal / Semi-formal / Aggressive        |
+| Field         | Description                                 |
+| ------------- | ------------------------------------------- |
+| Current CTC   | e.g., "12 LPA" — used in emails             |
+| Expected CTC  | e.g., "18 LPA"                              |
+| Notice Period | e.g., "30 days"                             |
+| Is Serving NP | Toggle: Yes/No                              |
+| Location      | Current city / open to relocation           |
+| Phone         | Included in CV / email signature            |
+| LinkedIn URL  | Appended to email                           |
+| SMTP Settings | Host, port, email, app password (encrypted) |
+| AI Tone       | Formal / Semi-formal / Aggressive           |
 
 ### 📄 Resume Uploader
+
 - Upload PDF or DOCX resume
 - AI parses it and extracts structured profile:
   - Work Experience (companies, roles, dates, bullets)
@@ -192,6 +197,7 @@ All fields are inline-editable and saved in DB:
 - Preview parsed profile before saving
 
 ### ⚡ Apply — Main Action Page
+
 - **URL Input**: Paste any job URL (LinkedIn, Naukri, Indeed, company site)
 - **Screenshot Upload**: Upload a screenshot of any job post
 - **Preview Mode**: Before sending, review the extracted job info, generated CV, and email
@@ -203,10 +209,11 @@ All fields are inline-editable and saved in DB:
 ## 🤖 AI Pipeline Deep Dive
 
 ### Step 1 — Job Extraction Prompt
+
 ```
 System: You are a job post parser. Extract structured JSON from the given job content.
 Output ONLY valid JSON with these keys:
-  jobTitle, company, requiredSkills[], preferredSkills[], 
+  jobTitle, company, requiredSkills[], preferredSkills[],
   responsibilities[], minExperience, location, workMode,
   hrEmail (if found), salaryRange (if found), applyLink
 
@@ -214,21 +221,23 @@ User: [scraped HTML / OCR text from screenshot]
 ```
 
 ### Step 2 — CV Tailoring Prompt
+
 ```
 System: You are an expert CV writer. Given a candidate profile and a job description,
 rewrite the candidate's experience bullets and skills section to best match the job.
 Keep all facts true — only reframe and reorder. Output structured JSON.
 
-User: 
+User:
   CANDIDATE_PROFILE: [parsed resume JSON]
   JOB_DESCRIPTION: [extracted job JSON]
   USER_INFO: { currentCTC, expectedCTC, noticePeriod, isServing }
 ```
 
 ### Step 3 — Email Writing Prompt
+
 ```
 System: You are a professional job applicant. Write a concise, personalized cold email
-to an HR at [Company] for the role of [Title]. 
+to an HR at [Company] for the role of [Title].
 Mention: notice period, expected CTC, key matching skills.
 Tone: [user-selected tone]. Keep it under 200 words.
 
@@ -239,6 +248,7 @@ User:
 ```
 
 ### Step 4 — CV PDF Generation
+
 - Tailored CV JSON is passed to a PDF template engine
 - Generates a clean, ATS-friendly single-page PDF
 - Attached to the email automatically
@@ -265,21 +275,22 @@ autoapply/
 │
 ├── backend/                     # Express API
 │   ├── src/
+│   │   ├── models/
+│   │   │   ├── UserInfo.js      # Mongoose model
+│   │   │   ├── ResumeProfile.js # Mongoose model
+│   │   │   └── Application.js   # Mongoose model
 │   │   ├── routes/
-│   │   │   ├── apply.ts         # POST /apply (URL or image)
-│   │   │   ├── resume.ts        # POST /resume/upload
-│   │   │   ├── info.ts          # GET/PUT /info
-│   │   │   └── applications.ts  # GET /applications
+│   │   │   ├── apply.js         # POST /apply (URL or image)
+│   │   │   ├── resume.js        # POST /resume/upload
+│   │   │   ├── info.js          # GET/PUT /info
+│   │   │   └── applications.js  # GET /applications
 │   │   ├── services/
-│   │   │   ├── jobExtractor.ts  # Playwright scraping
-│   │   │   ├── aiService.ts     # Claude API calls
-│   │   │   ├── cvGenerator.ts   # PDF generation
-│   │   │   └── emailService.ts  # Nodemailer
-│   │   ├── middleware/
-│   │   │   └── auth.ts          # JWT verification
-│   │   └── index.ts
-│   ├── prisma/
-│   │   └── schema.prisma        # DB schema
+│   │   │   ├── jobExtractor.js  # Playwright scraping
+│   │   │   ├── aiService.js     # Gemini API calls
+│   │   │   ├── cvGenerator.js   # PDF generation
+│   │   │   └── emailService.js  # Nodemailer
+│   │   ├── db.js                # MongoDB connection
+│   │   └── index.js
 │   └── .env
 │
 ├── docker-compose.yml
@@ -288,44 +299,53 @@ autoapply/
 
 ---
 
-## 🗄 Database Schema
+## 🗄 Database Schema (MongoDB Collections)
 
-```prisma
-model UserInfo {
-  id           Int     @id @default(1)
-  currentCTC   String?
-  expectedCTC  String?
-  noticePeriod String?
-  isServing    Boolean @default(false)
-  phone        String?
-  location     String?
-  linkedinUrl  String?
-  smtpHost     String?
-  smtpPort     Int?
-  smtpEmail    String?
-  smtpPassword String?  // AES encrypted
-  aiTone       String  @default("formal")
+```javascript
+// Collection: userinfos
+{
+  currentCTC:   String,        // e.g., "12 LPA"
+  expectedCTC:  String,
+  noticePeriod: String,
+  isServing:    Boolean,       // default: false
+  phone:        String,
+  location:     String,
+  linkedinUrl:  String,
+  smtpHost:     String,
+  smtpPort:     Number,
+  smtpEmail:    String,
+  smtpPassword: String,        // AES encrypted
+  aiTone:       String,        // default: "formal"
+  createdAt:    Date,
+  updatedAt:    Date
 }
 
-model ResumeProfile {
-  id             Int      @id @default(1)
-  rawText        String   // Full resume text
-  profileSummary Json     // Parsed structured profile
-  uploadedAt     DateTime @updatedAt
+// Collection: resumeprofiles
+{
+  rawText:        String,      // Full resume text
+  profileSummary: Object,      // Parsed structured profile
+  skills:         Array,       // Skills list
+  experience:     Array,       // Experience entries
+  education:      Array,       // Education entries
+  projects:       Array,       // Projects list
+  createdAt:      Date,
+  updatedAt:      Date
 }
 
-model Application {
-  id           Int      @id @default(autoincrement())
-  jobTitle     String
-  company      String
-  hrEmail      String?
-  jobUrl       String?
-  extractedJob Json
-  generatedCv  String   // Path to generated PDF
-  emailSubject String
-  emailBody    String
-  status       String   @default("sent")  // sent, replied, rejected, interview
-  sentAt       DateTime @default(now())
+// Collection: applications
+{
+  jobTitle:     String,        // required
+  company:      String,        // required
+  hrEmail:      String,
+  jobUrl:       String,
+  extractedJob: Object,        // Parsed job JSON
+  generatedCv:  String,        // Path to generated PDF
+  emailSubject: String,
+  emailBody:    String,
+  status:       String,        // enum: sent, replied, rejected, interview
+  sentAt:       Date,          // default: now
+  createdAt:    Date,
+  updatedAt:    Date
 }
 ```
 
@@ -335,15 +355,11 @@ model Application {
 
 ```env
 # Backend .env
-DATABASE_URL="postgresql://user:pass@localhost:5432/autoapply"
-ANTHROPIC_API_KEY="sk-ant-..."
+MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/autoapply"
+GEMINI_API_KEY="your-gemini-api-key"
 JWT_SECRET="your-random-secret"
 ENCRYPTION_KEY="32-char-key-for-smtp-password"
 PORT=4000
-
-# Optional
-LINKEDIN_EMAIL="your@email.com"
-LINKEDIN_PASSWORD="yourpassword"
 ```
 
 ---
@@ -355,23 +371,20 @@ LINKEDIN_PASSWORD="yourpassword"
 git clone https://github.com/you/autoapply
 cd autoapply
 
-# 2. Start Database
-docker-compose up -d postgres
-
-# 3. Backend Setup
+# 2. Backend Setup
 cd backend
+cp .env.example .env
+# Edit .env with your MongoDB Atlas connection string and API keys
 npm install
-npx prisma migrate dev
 npm run dev
 
-# 4. Frontend Setup
+# 3. Frontend Setup
 cd ../frontend
 npm install
 npm run dev
-
-# OR: Full Docker Setup
-docker-compose up --build
 ```
+
+> **Note:** No local database setup needed — the app connects to MongoDB Atlas (cloud). Just add your connection string to `.env`.
 
 Access portal at: `http://localhost:3000`
 
@@ -379,19 +392,20 @@ Access portal at: `http://localhost:3000`
 
 ## 🔒 Security Considerations
 
-| Risk                     | Mitigation                                      |
-|--------------------------|-------------------------------------------------|
-| SMTP credentials exposed | AES-256 encryption in DB, never sent to frontend|
-| Unauthorized access      | JWT auth — it's your personal portal            |
-| LinkedIn rate limiting   | Add delays, use session cookies carefully       |
-| AI hallucinating email   | Preview before send mode (recommended default)  |
-| Resume data leakage      | All data stays local / your own server          |
+| Risk                     | Mitigation                                       |
+| ------------------------ | ------------------------------------------------ |
+| SMTP credentials exposed | AES-256 encryption in DB, never sent to frontend |
+| Unauthorized access      | JWT auth — it's your personal portal             |
+| LinkedIn rate limiting   | Add delays, use session cookies carefully        |
+| AI hallucinating email   | Preview before send mode (recommended default)   |
+| Resume data leakage      | All data stays local / your own server           |
 
 ---
 
 ## 🗺 Roadmap
 
 ### v1.0 — MVP
+
 - [x] Architecture & planning
 - [ ] Info page (CTC, notice period settings)
 - [ ] Resume upload + AI parsing
@@ -401,6 +415,7 @@ Access portal at: `http://localhost:3000`
 - [ ] Home dashboard with sent log
 
 ### v1.5 — Enhanced
+
 - [ ] Screenshot-based job extraction (Claude Vision)
 - [ ] Preview & edit mode before sending
 - [ ] Application status tracking
@@ -408,6 +423,7 @@ Access portal at: `http://localhost:3000`
 - [ ] Multiple resume templates
 
 ### v2.0 — Power Features
+
 - [ ] Bulk apply from saved job list
 - [ ] LinkedIn Easy Apply automation
 - [ ] Weekly analytics report
@@ -425,4 +441,4 @@ Access portal at: `http://localhost:3000`
 
 ---
 
-*Built for personal use. Automate smarter, not harder. 🎯*
+_Built for personal use. Automate smarter, not harder. 🎯_

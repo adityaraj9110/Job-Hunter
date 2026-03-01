@@ -1,14 +1,11 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const Application = require('../models/Application');
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/applications — list all applications with stats
 router.get('/', async (req, res) => {
   try {
-    const applications = await prisma.application.findMany({
-      orderBy: { sentAt: 'desc' },
-    });
+    const applications = await Application.find().sort({ sentAt: -1 });
 
     // Calculate stats
     const total = applications.length;
@@ -42,10 +39,15 @@ router.patch('/:id', async (req, res) => {
       return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
 
-    const application = await prisma.application.update({
-      where: { id: parseInt(id) },
-      data: { status },
-    });
+    const application = await Application.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
 
     res.json({ success: true, application });
   } catch (err) {
